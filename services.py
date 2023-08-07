@@ -46,11 +46,17 @@ class EntryFileServices():
 
     @staticmethod 
     def get_entry(entry_row: str) -> str:
-        pattern = r'^([^:]+):(.*)'
+        pattern = r'^([^=]+)=(.*)'
         results = re.match(pattern, entry_row)
         description = results.group(1)
         encrypted_data = results.group(2)
         return description, encrypted_data
+
+    @classmethod
+    def get_all_entries_descriptions(cls):
+        with open(".entries", "r") as f:
+            lines = f.readlines()
+        return [item[0] for item in map(cls.get_entry, lines)]
 
 
 class ConfigFileServices():
@@ -66,6 +72,6 @@ class ConfigFileServices():
             encrypted_data = AESService.encrypt(value).decode()
             env_file.write(f"{variable_name}={encrypted_data}\n")
         return f"Variable {variable_name} successfully saved in .env file!"
-    
+
     def set_master_password():
         pass
