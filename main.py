@@ -1,50 +1,44 @@
-import re
-from services import AESService
+import curses
 
+def main(stdscr):
+    curses.curs_set(0)
+    stdscr.keypad(True)
 
-def save_in_config_file(variable_name: str, value: str) -> str:
-    with open(".env", "r") as env_file:
-        variable_exist = any(map(lambda l: l.startswith(variable_name),
-                                 env_file.readlines()))
-    if variable_exist:
-        return f"Variable {variable_name} already exist in .env file!"
+    height, width = stdscr.getmaxyx()
+    main_win = curses.newwin(height, width, 0, 0)
 
-    with open(".env", "a+") as env_file:
-        encrypted_data = AESService.encrypt(value).decode()
-        env_file.write(f"{variable_name}={encrypted_data}\n")
-    return f"Variable {variable_name} successfully saved in .env file!"
+    options = ["Option 1", "Option 2", "Exit"]
+    selected_option = 0
 
-
-def set_master_password() -> str:
     while True:
-        passwd1 = input("Type your master password: ")
-        passwd2 = input("ReType master password: ")
-        if passwd1 == passwd2:
-            return save_in_config_file("MASTER_PASSWORD", passwd1)
-        return "Provided passowrds does not match! Try again."
+        main_win.clear()
+
+        for idx, option in enumerate(options):
+            if idx == selected_option:
+                main_win.addstr(10 + idx, 10, f"> {option}", curses.A_BOLD)
+            else:
+                main_win.addstr(10 + idx, 10, f"  {option}")
+
+        main_win.refresh()
+
+        key = stdscr.getch()
+
+        if key == curses.KEY_UP:
+            selected_option = max(0, selected_option - 1)
+        elif key == curses.KEY_DOWN:
+            selected_option = min(len(options) - 1, selected_option + 1)
+        elif key == ord('\n'):
+            if selected_option == 0:
+                # Handle Option 1
+                pass
+            elif selected_option == 1:
+                # Handle Option 2
+                pass
+            elif selected_option == 2:
+                break
+
+curses.wrapper(main)
 
 
-def add_entry(description: str, uname: str, password: str) -> None:
-    try:
-        if '=' in description:
-            raise Exception("You can't use '=' in description!")
-        if len(description) > 32:
-            raise Exception("Description to broad - the max is 60 characters!")
-        encrypted_data = AESService.encrypt(f"USERNAME: {uname}, PASSWD: {password}").decode()
-        entry = f"{description.capitalize()}={encrypted_data}\n"
-        with open(".entries", "a+") as f:
-            f.write(entry)
-    except Exception as e:
-        return e
-
-
-def get_entry_data(entry_row: str) -> str:
-    pattern = r'^([^:]+):(.*)'
-    results = re.match(pattern, entry_row)
-    description = results.group(1)
-    encrypted_data = results.group(2)
-    return description, encrypted_data
-
-
-if __name__ == "__main__":
-    pass
+# if __name__ == "__main__":
+#     main()
