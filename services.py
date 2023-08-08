@@ -31,18 +31,19 @@ class AESService():
 class EntryFileServices():
 
     @staticmethod
-    def add_entry(description: str, uname: str, password: str) -> None:
+    def add_entry(description: str, login: str, password: str) -> None:
         try:
             if '=' in description:
-                raise Exception("You can't use '=' in description!")
+                return False, "You can't use '=' in description!"
             if len(description) > 32:
-                raise Exception("Description to broad - the max is 60 characters!")
-            encrypted_data = AESService.encrypt(f"USERNAME: {uname}, PASSWD: {password}").decode()
+                return False, "Description to broad - the max is 60 characters!"
+            encrypted_data = AESService.encrypt(f"USERNAME: {login}, PASSWD: {password}").decode()
             entry = f"{description.capitalize()}={encrypted_data}\n"
             with open(".entries", "a+") as f:
                 f.write(entry)
+            return True, "Entry added!!!"
         except Exception as e:
-            return e
+            return False, e
 
     @staticmethod 
     def get_entry(entry_row: str) -> str:

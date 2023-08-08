@@ -59,15 +59,15 @@ class MainView:
             return action() if action else None
 
     def run(self):
-        self._clear_data()
+        self._update_data()
         while True:
             self.main_win.clear()
             self.display_window()
             go_back = self.navigate()
             if go_back:
                 break
-            
-    def _clear_data(self):
+
+    def _update_data(self):
         pass
 
 
@@ -81,7 +81,6 @@ class ListEntries(MainView):
         self.selected_option = 0
         self.options = self.set_options()
 
-
     def set_options(self):
         descriptions = EntryFileServices.get_all_entries_descriptions()
         if descriptions:
@@ -91,6 +90,9 @@ class ListEntries(MainView):
         desc = "There is nothing to show. Go back and add some entries!"
         return [{"display_name": desc, "action": lambda: True}]
 
+    def _update_data(self):
+        self.options = self.set_options()
+
 
 class AddNewEntry(MainView):
 
@@ -99,11 +101,11 @@ class AddNewEntry(MainView):
         self.stdscr = stdscr
         self.selected_option = 0
         self.prompt_info = None
-        
+
         self.description = None
         self.login = None
         self.password = None
-        
+
         self.RED = curses.color_pair(3)
         self.GREEN = curses.color_pair(4)
         self.options = self.set_options()
@@ -118,14 +120,26 @@ class AddNewEntry(MainView):
 
     def save_entry(self):
         if all([self.description, self.login, self.password]):
-            self.prompt_info = None
-            return True
+            result, msg = EntryFileServices.add_entry(self.description,
+                                                      self.login,
+                                                      self.password)
+            self.prompt_info = msg
+            return result
         self.prompt_info = "Provide missing data - marked on RED!"
         return False
 
-    def _clear_data(self):
+    def _update_data(self):
+        self._update_options_colors()
         self.selected_option = 0
         self.prompt_info = None
+
+    def _update_options_colors(self):
+        if self.description:
+            self.options[0]["color"] = self.GREEN
+        if self.login:
+            self.options[1]["color"] = self.GREEN
+        if self.password:
+            self.options[2]["color"] = self.GREEN
 
 
 curses.wrapper(main)
