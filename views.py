@@ -17,10 +17,21 @@ class MainView:
 
     def _set_options(self):
         self.options = [
-            Option("Show Saved Entries", ListEntries(self.stdscr).run),
-            Option("Add New Entry", AddNewEntry(self.stdscr).run),
-            Option("Exit Program", lambda: True),
+            Option("Show Saved Entries", self.show_saved_entries_view),
+            Option("Add New Entry", self.add_new_entry_view),
+            Option("Exit Program", self.exit_view),
         ]
+
+    def exit_view(self):
+        return True
+
+    def show_saved_entries_view(self):
+        action = ListEntries(self.stdscr)
+        action.run()
+
+    def add_new_entry_view(self):
+        action = AddNewEntry(self.stdscr)
+        action.run()
 
     def _set_default_view_params(self):
         self.prompt_info = None
@@ -61,16 +72,12 @@ class MainView:
             return action() if action else None
 
     def run(self):
-        self._update_data()
         while True:
             self.window.clear()
             self.display_window()
             go_back = self.navigate()
             if go_back:
                 break
-
-    def _update_data(self):
-        pass
 
 
 class ListEntries(MainView):
@@ -82,17 +89,15 @@ class ListEntries(MainView):
         descriptions = EntryFileServices.get_all_entries_descriptions()
         if descriptions:
             options = [Option(desc, None) for desc in descriptions]
-            options.append(Option("Go Back", lambda: True))
-            return options
-        desc = "There is nothing to show. Go back and add some entries!"
-        return [Option(desc, lambda: True)]
-
-    def _update_data(self):
-        self.options = self._set_options()
+            options.append(Option("Go Back", self.exit_view))
+        else:
+            desc = "There is nothing to show. Go back and add some entries!"
+            options = [Option(desc, self.exit_view)]
+        self.options = options
 
 
 class AddNewEntry(MainView):
-    
+
     def _set_default_view_params(self):
         self.selected_option = 0
         self.prompt_info = None
@@ -142,7 +147,7 @@ class AddNewEntry(MainView):
             Option("Set login", self.set_login, self.RED),
             Option("Set password", self.set_password, self.RED),
             Option("Save Entry", self.save_entry),
-            Option("Go Back", lambda: True)
+            Option("Go Back", self.exit_view)
         ]
 
     def save_entry(self):
@@ -154,10 +159,6 @@ class AddNewEntry(MainView):
             return result
         self.prompt_info = "Provide missing data - marked on RED!"
         return False
-
-    def _update_data(self):
-        self._set_default_view_params()
-        self._update_options_colors()
 
     def _update_options_colors(self):
         if self.description:
