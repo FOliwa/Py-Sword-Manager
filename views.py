@@ -143,9 +143,9 @@ class AddNewEntry(MainView):
 
     def _set_options(self):
         self.options = [
-            Option("Set entry description", self.set_description, self.RED),
-            Option("Set login", self.set_login, self.RED),
-            Option("Set password", self.set_password, self.RED),
+            Option("Set entry description     [ENTER]", self.set_description, self.RED),
+            Option("Set login                 [ENTER]", self.set_login, self.RED),
+            Option("Set password              [ENTER]", self.set_password, self.RED),
             Option("Save Entry", self.save_entry),
             Option("Go Back", self.exit_view)
         ]
