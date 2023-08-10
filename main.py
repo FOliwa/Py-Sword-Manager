@@ -1,5 +1,5 @@
 import curses
-from views import MainView
+from views import MainView, LoginView
 
 
 def setup_curses():
@@ -16,7 +16,8 @@ def setup_curses():
 
 def main(stdscr):
     stdscr = setup_curses()
-    MainView(stdscr).run()
+    if LoginView(stdscr).run():
+        MainView(stdscr).run()
 
 
 curses.wrapper(main)

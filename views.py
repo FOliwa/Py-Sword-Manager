@@ -48,7 +48,7 @@ class Menu(ABC):
             else:
                 self.window.addstr(10 + idx, 10, f"  {option.display_name}", color)
         if self.prompt_info:
-            self.window.addstr(7, 7, self.prompt_info, self.RED)
+            self.window.addstr(7, 7, self.prompt_info.get("msg"), self.prompt_info.get("color", self.RED))
         self.window.refresh()
 
     def navigate(self):
@@ -61,6 +61,27 @@ class Menu(ABC):
             action = self.options[self.selected_option].action
             return action() if action else None
 
+    def get_input_from_user(self):
+        height, width = self.stdscr.getmaxyx()
+        input_window = curses.newwin(1, width, height - 1, 0)
+        input_window.addstr(0, 0, "Enter your text:")
+        input_window.refresh()
+
+        user_input = ""
+        while True:
+            key = input_window.getch()
+            if key == 10:
+                # ENTER PRESSED
+                return user_input
+            elif key == 127:
+                # BACKSPACE PRESSED
+                user_input = user_input[:-1]
+            else:
+                user_input += chr(key)
+            input_window.clear()
+            input_window.addstr(0, 0, "Enter your text: " + user_input)
+            input_window.refresh()
+
     def run(self):
         while True:
             self.window.clear()
@@ -68,6 +89,69 @@ class Menu(ABC):
             go_back = self.navigate()
             if go_back:
                 break
+        curses.endwin()
+
+
+class LoginView(Menu):
+
+    def _set_options(self):
+        self.options = [
+            Option("Login", None),
+            Option("Register", self.go_to_register_view),
+            Option("Exit", self.exit_menu)
+        ]
+
+    def go_to_register_view(self):
+        action = RegisterView(self.stdscr)
+        action.run()
+
+
+class RegisterView(Menu):
+
+    def _set_options(self):
+        self.options = [
+            Option("Set username            [ENTER]", self.set_username, self.RED),
+            Option("Set password            [ENTER]", self.set_password1, self.RED),
+            Option("Retype password         [ENTER]", self.set_password2, self.RED),
+            Option("Register", None),
+            Option("Exit", self.exit_menu),
+        ]
+
+    def _set_default_view_params(self):
+        self.selected_option = 0
+        self.prompt_info = None
+        self.username = None
+        self.password1 = None
+        self.password2 = None
+
+    def set_username(self):
+        self.username = self.get_input_from_user()
+        self._update_options_colors()
+        self.prompt_info = {"msg": "User name set up.", "color": self.GREEN}
+
+    def set_password1(self):
+        self.password1 = self.get_input_from_user()
+        self._update_options_colors()
+        self.prompt_info = {"msg": "Password set up.", "color": self.GREEN}
+
+    def set_password2(self):
+        self.password2 = self.get_input_from_user()
+        self._update_options_colors()
+        if self.password1 != self.password2:
+            self.prompt_info = {"msg": "Retyped password does not match the first one.",
+                                "color": self.RED}
+        else:
+            self.prompt_info = {"msg": "Password retyped correctly.", 
+                                "color": self.GREEN}
+
+    def _update_options_colors(self):
+        if self.username:
+            self.options[0].color = self.GREEN
+        if self.password1:
+            self.options[1].color = self.GREEN
+        if self.password2 and self.password1 == self.password2:
+            self.options[2].color = self.GREEN
+        self.prompt_info = None
 
 
 class MainView(Menu):
@@ -136,31 +220,10 @@ class AddNewEntryView(Menu):
             result, msg = EntryFileServices.add_entry(self.description,
                                                       self.login,
                                                       self.password)
-            self.prompt_info = msg
+            self.prompt_info = {"msg": msg}
             return result
-        self.prompt_info = "Provide missing data - marked on RED!"
+        self.prompt_info = {"msg": "Provide missing data - marked on RED!"}
         return False
-
-    def get_input_from_user(self):
-        height, width = self.stdscr.getmaxyx()
-        input_window = curses.newwin(1, width, height - 1, 0)
-        input_window.addstr(0, 0, "Enter your text")
-        input_window.refresh()
-
-        user_input = ""
-        while True:
-            key = input_window.getch()
-            if key == 10:
-                # ENTER PRESSED
-                return user_input
-            elif key == 127:
-                # BACKSPACE PRESSED
-                user_input = user_input[:-1]
-            else:
-                user_input += chr(key)
-            input_window.clear()
-            input_window.addstr(0, 0, "Enter your text: " + user_input)
-            input_window.refresh()
 
     def _update_options_colors(self):
         if self.description:
