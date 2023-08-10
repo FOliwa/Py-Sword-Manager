@@ -1,4 +1,5 @@
 import curses
+from abc import ABC, abstractmethod
 from services import EntryFileServices
 
 
@@ -9,39 +10,7 @@ class Option:
         self.color = color
 
 
-class MainView:
-
-    def _create_window(self):
-        height, width = self.stdscr.getmaxyx()
-        return curses.newwin(height, width, 0, 0)
-
-    def _set_options(self):
-        self.options = [
-            Option("Show Saved Entries", self.show_saved_entries_view),
-            Option("Add New Entry", self.add_new_entry_view),
-            Option("Exit Program", self.exit_view),
-        ]
-
-    def exit_view(self):
-        return True
-
-    def show_saved_entries_view(self):
-        action = ListEntries(self.stdscr)
-        action.run()
-
-    def add_new_entry_view(self):
-        action = AddNewEntry(self.stdscr)
-        action.run()
-
-    def _set_default_view_params(self):
-        self.prompt_info = None
-        self.selected_option = 0
-
-    def _set_colors(self):
-        self.WHITE = curses.color_pair(1)
-        self.SELECTION_COLOR = curses.color_pair(2)
-        self.RED = curses.color_pair(3)
-        self.GREEN = curses.color_pair(4)
+class Menu(ABC):
 
     def __init__(self, stdscr) -> None:
         self.stdscr = stdscr
@@ -49,6 +18,27 @@ class MainView:
         self._set_colors()
         self._set_options()
         self._set_default_view_params()
+
+    def _create_window(self):
+        height, width = self.stdscr.getmaxyx()
+        return curses.newwin(height, width, 0, 0)
+
+    def _set_colors(self):
+        self.WHITE = curses.color_pair(1)
+        self.SELECTION_COLOR = curses.color_pair(2)
+        self.RED = curses.color_pair(3)
+        self.GREEN = curses.color_pair(4)
+
+    @abstractmethod
+    def _set_options(self):
+        pass
+
+    def exit_menu(self):
+        return True
+
+    def _set_default_view_params(self):
+        self.prompt_info = None
+        self.selected_option = 0
 
     def display_window(self):
         for idx, option in enumerate(self.options):
@@ -80,23 +70,38 @@ class MainView:
                 break
 
 
-class ListEntries(MainView):
+class MainView(Menu):
 
-    def __init__(self, stdscr) -> None:
-        super().__init__(stdscr)
+    def _set_options(self):
+        self.options = [
+            Option("Show Saved Entries", self.show_saved_entries_view),
+            Option("Add New Entry", self.add_new_entry_view),
+            Option("Exit Program", self.exit_menu),
+        ]
+
+    def show_saved_entries_view(self):
+        action = ListEntriesView(self.stdscr)
+        action.run()
+
+    def add_new_entry_view(self):
+        action = AddNewEntryView(self.stdscr)
+        action.run()
+
+
+class ListEntriesView(Menu):
 
     def _set_options(self):
         descriptions = EntryFileServices.get_all_entries_descriptions()
         if descriptions:
             options = [Option(desc, None) for desc in descriptions]
-            options.append(Option("Go Back", self.exit_view))
+            options.append(Option("Go Back", self.exit_menu))
         else:
             desc = "There is nothing to show. Go back and add some entries!"
-            options = [Option(desc, self.exit_view)]
+            options = [Option(desc, self.exit_menu)]
         self.options = options
 
 
-class AddNewEntry(MainView):
+class AddNewEntryView(Menu):
 
     def _set_default_view_params(self):
         self.selected_option = 0
@@ -105,8 +110,36 @@ class AddNewEntry(MainView):
         self.login = None
         self.password = None
 
-    def __init__(self, stdscr) -> None:
-        super().__init__(stdscr)
+    def _set_options(self):
+        self.options = [
+            Option("Set entry description     [ENTER]", self.set_description, self.RED),
+            Option("Set login                 [ENTER]", self.set_login, self.RED),
+            Option("Set password              [ENTER]", self.set_password, self.RED),
+            Option("Save Entry", self.save_entry),
+            Option("Go Back", self.exit_menu)
+        ]
+
+    def set_description(self):
+        self.description = self.get_input_from_user()
+        self._update_options_colors()
+
+    def set_login(self):
+        self.login = self.get_input_from_user()
+        self._update_options_colors()
+
+    def set_password(self):
+        self.password = self.get_input_from_user()
+        self._update_options_colors()
+
+    def save_entry(self):
+        if all([self.description, self.login, self.password]):
+            result, msg = EntryFileServices.add_entry(self.description,
+                                                      self.login,
+                                                      self.password)
+            self.prompt_info = msg
+            return result
+        self.prompt_info = "Provide missing data - marked on RED!"
+        return False
 
     def get_input_from_user(self):
         height, width = self.stdscr.getmaxyx()
@@ -128,37 +161,6 @@ class AddNewEntry(MainView):
             input_window.clear()
             input_window.addstr(0, 0, "Enter your text: " + user_input)
             input_window.refresh()
-
-    def set_description(self):
-        self.description = self.get_input_from_user()
-        self._update_options_colors()
-
-    def set_login(self):
-        self.login = self.get_input_from_user()
-        self._update_options_colors()
-
-    def set_password(self):
-        self.password = self.get_input_from_user()
-        self._update_options_colors()
-
-    def _set_options(self):
-        self.options = [
-            Option("Set entry description     [ENTER]", self.set_description, self.RED),
-            Option("Set login                 [ENTER]", self.set_login, self.RED),
-            Option("Set password              [ENTER]", self.set_password, self.RED),
-            Option("Save Entry", self.save_entry),
-            Option("Go Back", self.exit_view)
-        ]
-
-    def save_entry(self):
-        if all([self.description, self.login, self.password]):
-            result, msg = EntryFileServices.add_entry(self.description,
-                                                      self.login,
-                                                      self.password)
-            self.prompt_info = msg
-            return result
-        self.prompt_info = "Provide missing data - marked on RED!"
-        return False
 
     def _update_options_colors(self):
         if self.description:
