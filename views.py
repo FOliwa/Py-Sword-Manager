@@ -147,10 +147,10 @@ class RegisterView(Menu):
 
     def _hash_password(self):
         salt = os.urandom(16)  # Generate a random 16-byte salt
-        password = self.password1.encode()
+        password = self.password1.encode('utf-8')
         salted_password = salt + password
         hash_obj = hashlib.sha256(salted_password)
-        return hash_obj.hexdigest(), salt
+        return hash_obj.hexdigest(), salt.hex()
 
     def _set_default_view_params(self):
         self.selected_option = 0
