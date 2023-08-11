@@ -1,4 +1,7 @@
 import curses
+import os
+import hashlib
+import json
 from abc import ABC, abstractmethod
 from services import EntryFileServices
 
@@ -13,6 +16,7 @@ class Option:
 class Menu(ABC):
 
     def __init__(self, stdscr) -> None:
+        self.prompt_info = None
         self.stdscr = stdscr
         self.window = self._create_window()
         self._set_colors()
@@ -96,7 +100,7 @@ class LoginView(Menu):
 
     def _set_options(self):
         self.options = [
-            Option("Login", None),
+            Option("Login", self.login_user),
             Option("Register", self.go_to_register_view),
             Option("Exit", self.exit_menu)
         ]
@@ -104,6 +108,20 @@ class LoginView(Menu):
     def go_to_register_view(self):
         action = RegisterView(self.stdscr)
         action.run()
+
+    def login_user(self):
+        username = self.get_input_from_user()
+        password = self.get_input_from_user()
+        if self.user_authenticated(username, password):
+            main_view = MainView(self.stdscr)
+            main_view.prompt_info = {"msg": f"Hello {username}", "color": self.GREEN}
+            main_view.run()
+        else:
+            self.prompt_info = {"msg": f"Can't login as {username}", "color": self.RED}
+            return False
+
+    def user_authenticated(self, username, password, salt):
+        return username == "dupa" and password == "dupa"
 
 
 class RegisterView(Menu):
@@ -113,9 +131,26 @@ class RegisterView(Menu):
             Option("Set username            [ENTER]", self.set_username, self.RED),
             Option("Set password            [ENTER]", self.set_password1, self.RED),
             Option("Retype password         [ENTER]", self.set_password2, self.RED),
-            Option("Register", None),
+            Option("Submmit", self.save_user),
             Option("Exit", self.exit_menu),
         ]
+
+    def save_user(self):
+        if all([self.username, self.password1, self.password1, self.password1 == self.password2]):
+            hashed_password, salt = self._hash_password()
+            user_info = {"username": self.username, "salt": salt, "hashed_password": hashed_password}
+            with open("users_data.json", "a+") as f:
+                json.dump(user_info, f)
+            return True
+        else:
+            self.prompt_info = {"msg": "DUPA ZBITA"}
+
+    def _hash_password(self):
+        salt = os.urandom(16)  # Generate a random 16-byte salt
+        password = self.password1.encode()
+        salted_password = salt + password
+        hash_obj = hashlib.sha256(salted_password)
+        return hash_obj.hexdigest(), salt
 
     def _set_default_view_params(self):
         self.selected_option = 0
@@ -160,7 +195,7 @@ class MainView(Menu):
         self.options = [
             Option("Show Saved Entries", self.show_saved_entries_view),
             Option("Add New Entry", self.add_new_entry_view),
-            Option("Exit Program", self.exit_menu),
+            Option("Log Out", self.exit_menu),
         ]
 
     def show_saved_entries_view(self):
