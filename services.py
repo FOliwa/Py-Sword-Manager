@@ -6,6 +6,10 @@ import re
 class AESService():
 
     @staticmethod
+    def generate_secret_key():
+        return Fernet.generate_key().decode()
+
+    @staticmethod
     def encrypt(data: str) -> str:
         """
         Fernet is the AES in CBC mode

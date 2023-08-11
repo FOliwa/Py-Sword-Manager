@@ -3,7 +3,7 @@ import os
 import hashlib
 import json
 from abc import ABC, abstractmethod
-from services import EntryFileServices
+from services import EntryFileServices, AESService
 
 
 class Option:
@@ -138,7 +138,8 @@ class RegisterView(Menu):
     def save_user(self):
         if all([self.username, self.password1, self.password1, self.password1 == self.password2]):
             hashed_password, salt = self._hash_password()
-            user_info = {"username": self.username, "salt": salt, "hashed_password": hashed_password}
+            secret_key = AESService.generate_secret_key()
+            user_info = {"username": self.username, "salt": salt, "hashed_password": hashed_password, "secret_key": secret_key}
             with open("users_data.json", "a+") as f:
                 json.dump(user_info, f)
             return True
