@@ -3,7 +3,7 @@ import os
 import hashlib
 import json
 from abc import ABC, abstractmethod
-from services import EntryFileServices, AESService
+from services import EntryFileServices, AESService, InputService
 
 
 class Option:
@@ -65,27 +65,6 @@ class Menu(ABC):
             action = self.options[self.selected_option].action
             return action() if action else None
 
-    def get_input_from_user(self):
-        height, width = self.stdscr.getmaxyx()
-        input_window = curses.newwin(1, width, height - 1, 0)
-        input_window.addstr(0, 0, "Enter your text:")
-        input_window.refresh()
-
-        user_input = ""
-        while True:
-            key = input_window.getch()
-            if key == 10:
-                # ENTER PRESSED
-                return user_input
-            elif key == 127:
-                # BACKSPACE PRESSED
-                user_input = user_input[:-1]
-            else:
-                user_input += chr(key)
-            input_window.clear()
-            input_window.addstr(0, 0, "Enter your text: " + user_input)
-            input_window.refresh()
-
     def run(self):
         while True:
             self.window.clear()
@@ -94,100 +73,6 @@ class Menu(ABC):
             if go_back:
                 break
         curses.endwin()
-
-
-class LoginView(Menu):
-
-    def _set_options(self):
-        self.options = [
-            Option("Login", self.login_user),
-            Option("Register", self.go_to_register_view),
-            Option("Exit", self.exit_menu)
-        ]
-
-    def go_to_register_view(self):
-        action = RegisterView(self.stdscr)
-        action.run()
-
-    def login_user(self):
-        username = self.get_input_from_user()
-        password = self.get_input_from_user()
-        if self.user_authenticated(username, password):
-            main_view = MainView(self.stdscr)
-            main_view.prompt_info = {"msg": f"Hello {username}", "color": self.GREEN}
-            main_view.run()
-        else:
-            self.prompt_info = {"msg": f"Can't login as {username}", "color": self.RED}
-            return False
-
-    def user_authenticated(self, username, password, salt):
-        return username == "dupa" and password == "dupa"
-
-
-class RegisterView(Menu):
-
-    def _set_options(self):
-        self.options = [
-            Option("Set username            [ENTER]", self.set_username, self.RED),
-            Option("Set password            [ENTER]", self.set_password1, self.RED),
-            Option("Retype password         [ENTER]", self.set_password2, self.RED),
-            Option("Submmit", self.save_user),
-            Option("Exit", self.exit_menu),
-        ]
-
-    def save_user(self):
-        if all([self.username, self.password1, self.password1, self.password1 == self.password2]):
-            hashed_password, salt = self._hash_password()
-            secret_key = AESService.generate_secret_key()
-            user_info = {"username": self.username, "salt": salt, "hashed_password": hashed_password, "secret_key": secret_key}
-            with open("users_data.json", "a+") as f:
-                json.dump(user_info, f)
-            return True
-        else:
-            self.prompt_info = {"msg": "DUPA ZBITA"}
-
-    def _hash_password(self):
-        salt = os.urandom(16)  # Generate a random 16-byte salt
-        password = self.password1.encode('utf-8')
-        salted_password = salt + password
-        hash_obj = hashlib.sha256(salted_password)
-        return hash_obj.hexdigest(), salt.hex()
-
-    def _set_default_view_params(self):
-        self.selected_option = 0
-        self.prompt_info = None
-        self.username = None
-        self.password1 = None
-        self.password2 = None
-
-    def set_username(self):
-        self.username = self.get_input_from_user()
-        self._update_options_colors()
-        self.prompt_info = {"msg": "User name set up.", "color": self.GREEN}
-
-    def set_password1(self):
-        self.password1 = self.get_input_from_user()
-        self._update_options_colors()
-        self.prompt_info = {"msg": "Password set up.", "color": self.GREEN}
-
-    def set_password2(self):
-        self.password2 = self.get_input_from_user()
-        self._update_options_colors()
-        if self.password1 != self.password2:
-            self.prompt_info = {"msg": "Retyped password does not match the first one.",
-                                "color": self.RED}
-        else:
-            self.prompt_info = {"msg": "Password retyped correctly.", 
-                                "color": self.GREEN}
-
-    def _update_options_colors(self):
-        if self.username:
-            self.options[0].color = self.GREEN
-        if self.password1:
-            self.options[1].color = self.GREEN
-        if self.password2 and self.password1 == self.password2:
-            self.options[2].color = self.GREEN
-        self.prompt_info = None
 
 
 class MainView(Menu):
@@ -240,15 +125,15 @@ class AddNewEntryView(Menu):
         ]
 
     def set_description(self):
-        self.description = self.get_input_from_user()
+        self.description = InputService.get_input_from_user(self.stdscr)
         self._update_options_colors()
 
     def set_login(self):
-        self.login = self.get_input_from_user()
+        self.login = InputService.get_input_from_user(self.stdscr)
         self._update_options_colors()
 
     def set_password(self):
-        self.password = self.get_input_from_user()
+        self.password = InputService.get_input_from_user(self.stdscr)
         self._update_options_colors()
 
     def save_entry(self):

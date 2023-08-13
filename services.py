@@ -1,6 +1,7 @@
 from cryptography.fernet import Fernet
 from dotenv import dotenv_values
 import re
+import curses
 
 
 class AESService():
@@ -78,5 +79,37 @@ class ConfigFileServices():
             env_file.write(f"{variable_name}={encrypted_data}\n")
         return f"Variable {variable_name} successfully saved in .env file!"
 
-    def set_master_password():
-        pass
+
+class InputService():
+
+    @staticmethod
+    def get_input_from_user(stdscr, x=0, y=0, msg="Enter your text:"):
+        height, width = stdscr.getmaxyx()
+        input_window = curses.newwin(1, width, height - 1, 0)
+        input_window.addstr(0, 0, msg)
+        input_window.refresh()
+
+        user_input = ""
+        while True:
+            key = input_window.getch()
+            if key == 10:
+                # ENTER PRESSED
+                return user_input
+            elif key == 127:
+                # BACKSPACE PRESSED
+                user_input = user_input[:-1]
+            else:
+                user_input += chr(key)
+            input_window.clear()
+            input_window.addstr(y, x, msg + user_input)
+            input_window.refresh()
+
+
+class LogInService():
+
+    @staticmethod
+    def authenticate_user(stdscr):
+        while True:
+            user_input = InputService.get_input_from_user(stdscr, msg="Enter Master Password: ")
+            if user_input == "dummy":
+                return True

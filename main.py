@@ -1,5 +1,6 @@
 import curses
-from views import MainView, LoginView
+from views import MainView
+from services import LogInService
 
 
 def setup_curses():
@@ -16,7 +17,7 @@ def setup_curses():
 
 def main(stdscr):
     stdscr = setup_curses()
-    if LoginView(stdscr).run():
+    if LogInService.authenticate_user(stdscr):
         MainView(stdscr).run()
 
 
