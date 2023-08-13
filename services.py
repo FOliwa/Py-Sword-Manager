@@ -83,9 +83,9 @@ class ConfigFileServices():
 class InputService():
 
     @staticmethod
-    def get_input_from_user(stdscr, x=0, y=0, msg="Enter your text:"):
+    def get_input_from_user(stdscr, x=1, y=0, msg="Enter your text:", show_input=True):
         height, width = stdscr.getmaxyx()
-        input_window = curses.newwin(1, width, height - 1, 0)
+        input_window = curses.newwin(x, width, height - x, y)
         input_window.addstr(0, 0, msg)
         input_window.refresh()
 
@@ -101,7 +101,10 @@ class InputService():
             else:
                 user_input += chr(key)
             input_window.clear()
-            input_window.addstr(y, x, msg + user_input)
+            if show_input:
+                input_window.addstr(0, 0, msg + user_input)
+            else:
+                input_window.addstr(0, 0, msg + len(user_input)*'*')
             input_window.refresh()
 
 
@@ -109,7 +112,11 @@ class LogInService():
 
     @staticmethod
     def authenticate_user(stdscr):
+        height, width = stdscr.getmaxyx()
+        msg="ENTER YOUR MASTER PASSWROD AND PRESS ENTER...\n\t\t"
+        x=int(height/2)
+        y=int(width/2) - int(len(msg)/2)
         while True:
-            user_input = InputService.get_input_from_user(stdscr, msg="Enter Master Password: ")
-            if user_input == "dummy":
+            user_input = InputService.get_input_from_user(stdscr, x=x, y=y, msg=msg, show_input=False)
+            if user_input == "dupa":
                 return True
