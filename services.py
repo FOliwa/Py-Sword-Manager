@@ -2,6 +2,8 @@ from cryptography.fernet import Fernet
 from dotenv import dotenv_values
 import re
 import curses
+import hashlib
+import os
 
 
 class AESService():
@@ -69,14 +71,9 @@ class ConfigFileServices():
 
     @staticmethod
     def save_in_config_file(variable_name: str, value: str) -> str:
-        with open(".env", "r") as env_file:
-            variable_exist = any(map(lambda l: l.startswith(variable_name), env_file.readlines()))
-        if variable_exist:
-            return f"Variable {variable_name} already exist in .env file!"
-
         with open(".env", "a+") as env_file:
-            encrypted_data = AESService.encrypt(value).decode()
-            env_file.write(f"{variable_name}={encrypted_data}\n")
+            # encrypted_data = AESService.encrypt(value).decode()
+            env_file.write(f"{variable_name}={value}\n")
         return f"Variable {variable_name} successfully saved in .env file!"
 
 
@@ -110,13 +107,66 @@ class InputService():
 
 class LogInService():
 
-    @staticmethod
-    def authenticate_user(stdscr):
+    def create_master_password(stdscr):
         height, width = stdscr.getmaxyx()
-        msg="ENTER YOUR MASTER PASSWROD AND PRESS ENTER...\n\t\t"
-        x=int(height/2)
-        y=int(width/2) - int(len(msg)/2)
         while True:
-            user_input = InputService.get_input_from_user(stdscr, x=x, y=y, msg=msg, show_input=False)
-            if user_input == "dupa":
-                return True
+            msg="Set MASTER PASSWROD and press [ENTER]\n\t\t"
+            password1 = InputService.get_input_from_user(stdscr, 
+                                                         x=int(height/2), 
+                                                         y=int(width/2) - int(len(msg)/2), 
+                                                         msg=msg, show_input=False)
+            msg="Retype MASTER MASSWORD and press [ENTER]\n\t\t"
+            password2 = InputService.get_input_from_user(stdscr, 
+                                                         x=int(height/2), 
+                                                         y=int(width/2) - int(len(msg)/2), 
+                                                         msg=msg, show_input=False)
+            if password1 and password1 == password2:
+                salt = HasherService().get_salt()
+                salted_password = password1 + salt.hex()
+                hash = HasherService().hash_data(salted_password.encode())
+                aes_key = AESService.generate_secret_key()
+                ConfigFileServices.save_in_config_file("SALT", salt)
+                ConfigFileServices.save_in_config_file("SECRET_KEY", aes_key)
+                ConfigFileServices.save_in_config_file("MASTER_PASSWORD", hash)
+
+    def user_authenticated(password):
+        salt = HasherService().get_salt()
+        salted_password = password + salt
+        hash = HasherService().hash_data(salted_password.encode)
+        return hash == dotenv_values(".env").get("MASTER_PASSWORD")
+        
+
+    @classmethod
+    def authenticate_user(cls, stdscr):
+        height, width = stdscr.getmaxyx()
+        while True:
+            master_password = dotenv_values(".env").get("MASTER_PASSWORD")
+            if master_password:
+                msg=f"Enter MASTER PASSWROD and press [ENTER]\n\t\t"
+                user_input = InputService.get_input_from_user(stdscr, 
+                                                            x=int(height/2), 
+                                                            y=int(width/2) - int(len(msg)/2),
+                                                            msg=msg, show_input=False)
+                return cls.user_authenticated(user_input)
+            else:
+                cls.create_master_password(stdscr)
+
+
+    @staticmethod
+    def password_correct(passwrod):
+        hash, _ = HasherService().hash_data(passwrod)
+        master_password = dotenv_values(".env").get("MASTER_PASSWORD")
+        return hash, master_password
+
+
+class HasherService():
+
+    @classmethod
+    def hash_data(cls, value):
+        hash_obj = hashlib.sha256(value)
+        return hash_obj.hexdigest()
+
+    @classmethod
+    def get_salt(cls) -> bytes:
+        salt = dotenv_values(".env").get("SALT")
+        return salt.encode() if salt else os.urandom(16)

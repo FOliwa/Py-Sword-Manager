@@ -17,7 +17,7 @@ def setup_curses():
 
 def main(stdscr):
     stdscr = setup_curses()
-    if LogInService.authenticate_user(stdscr):
+    if LogInService().authenticate_user(stdscr):
         MainView(stdscr).run()
 
 
