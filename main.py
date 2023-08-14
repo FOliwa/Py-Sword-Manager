@@ -19,6 +19,8 @@ def main(stdscr):
     stdscr = setup_curses()
     if LogInService().authenticate_user(stdscr):
         MainView(stdscr).run()
+    else:
+        raise Exception("Wrong password")
 
 
 curses.wrapper(main)
