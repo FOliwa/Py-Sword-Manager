@@ -10,4 +10,3 @@ Here's a high-level overview and goals of the project:
 - Utilize hashing functions like SHA-256 to securely handle master passwords.
 - Prompt users to enter a master password to access the password manager.
 - Ensure the master password is not stored in plaintext but is securely hashed and compared.
-- (OPTIONAL) Adding an additional layer of authentication, like a PIN or biometric authentication.
