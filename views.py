@@ -1,6 +1,6 @@
 import curses
 from abc import ABC, abstractmethod
-from services import EntryFileServices, InputService
+from services import EntryFileServices, InputService, PromptService
 
 
 class Option:
@@ -95,12 +95,15 @@ class ListEntriesView(Menu):
     def _set_options(self):
         descriptions = EntryFileServices.get_all_entries_descriptions()
         if descriptions:
-            options = [Option(desc, None) for desc in descriptions]
+            options = [Option(desc, self.show_options) for desc in descriptions]
             options.append(Option("Go Back", self.exit_menu))
         else:
             desc = "There is nothing to show. Go back and add some entries!"
             options = [Option(desc, self.exit_menu)]
         self.options = options
+
+    def show_options(self):
+        PromptService.generate_prompt(self.stdscr)
 
 
 class AddNewEntryView(Menu):

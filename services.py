@@ -105,6 +105,15 @@ class InputService():
             input_window.refresh()
 
 
+class PromptService():
+
+    def generate_prompt(stdscr, x=1, y=0, msg="Test Prompt"):
+        height, width = stdscr.getmaxyx()
+        input_window = curses.newwin(x, width, height - x, y)
+        input_window.addstr(0, 0, msg)
+        input_window.refresh()
+        input_window.getch()
+
 class LogInService():
 
     def create_master_password(stdscr):
