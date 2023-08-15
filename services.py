@@ -121,10 +121,14 @@ class LogInService():
                                                          y=int(width/2) - int(len(msg)/2), 
                                                          msg=msg, show_input=False)
             if password1 and password1 == password2:
+                salt = HasherService.generate_salt()
+                ConfigFileServices.save_in_config_file("SALT", salt)
+                
                 hash = HasherService().hash_data(password2.encode())
+                ConfigFileServices.save_in_config_file("MASTER_PASSWORD", hash)
+                
                 aes_key = AESService.generate_secret_key()
                 ConfigFileServices.save_in_config_file("SECRET_KEY", aes_key)
-                ConfigFileServices.save_in_config_file("MASTER_PASSWORD", hash)
                 return True
 
     def user_authenticated(password):
@@ -158,5 +162,13 @@ class HasherService():
 
     @classmethod
     def hash_data(cls, value):
+        bvalue = value
+        salt = dotenv_values(".env").get("SALT")
+        if salt:
+            bvalue = bvalue + salt.encode()
         hash_obj = hashlib.sha256(value)
         return hash_obj.hexdigest()
+
+    @staticmethod
+    def generate_salt():
+        return os.urandom(16).hex()
