@@ -107,12 +107,14 @@ class InputService():
 
 class PromptService():
 
-    def generate_prompt(stdscr, x=1, y=0, msg="Test Prompt"):
-        height, width = stdscr.getmaxyx()
-        input_window = curses.newwin(x, width, height - x, y)
-        input_window.addstr(0, 0, msg)
+    def generate_prompt(win_x=0, win_y=0, win_h=3, win_w=10, msg="Test Prompt"):
+        input_window = curses.newwin(win_h, win_w, win_y, win_x)
+        input_window.border()
+        msg = msg[:win_w]
+        input_window.addstr(1, 1, msg)
         input_window.refresh()
         input_window.getch()
+
 
 class LogInService():
 

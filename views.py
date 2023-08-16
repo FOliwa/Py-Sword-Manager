@@ -12,6 +12,9 @@ class Option:
 
 class Menu(ABC):
 
+    BASE_WINDOW_X = 10
+    BASE_WINDOW_Y = 10
+
     def __init__(self, stdscr) -> None:
         self.prompt_info = None
         self.stdscr = stdscr
@@ -45,11 +48,11 @@ class Menu(ABC):
         for idx, option in enumerate(self.options):
             color = option.color if option.color else self.WHITE
             if idx == self.selected_option:
-                self.window.addstr(10 + idx, 10, f"> {option.display_name}", curses.A_BOLD | self.SELECTION_COLOR)
+                self.window.addstr(self.BASE_WINDOW_Y + idx, self.BASE_WINDOW_X, f"> {option.display_name}", curses.A_BOLD | self.SELECTION_COLOR)
             else:
-                self.window.addstr(10 + idx, 10, f"  {option.display_name}", color)
+                self.window.addstr(self.BASE_WINDOW_Y + idx, self.BASE_WINDOW_X, f"  {option.display_name}", color)
         if self.prompt_info:
-            self.window.addstr(7, 7, self.prompt_info.get("msg"), self.prompt_info.get("color", self.RED))
+            self.window.addstr(self.BASE_WINDOW_Y - 3, self.BASE_WINDOW_X, self.prompt_info.get("msg"), self.prompt_info.get("color", self.RED))
         self.window.refresh()
 
     def navigate(self):
@@ -103,7 +106,11 @@ class ListEntriesView(Menu):
         self.options = options
 
     def show_options(self):
-        PromptService.generate_prompt(self.stdscr)
+        height, width = self.stdscr.getmaxyx()
+        self.BASE_WINDOW_Y
+        win_h, win_w = 3, int(width/2)
+        win_x, win_y = self.BASE_WINDOW_X + 20, self.BASE_WINDOW_Y - 1 + self.selected_option
+        PromptService.generate_prompt(win_x, win_y, win_h, win_w, msg="Test Prompt")
 
 
 class AddNewEntryView(Menu):
