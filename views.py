@@ -48,12 +48,15 @@ class Menu(ABC):
         for idx, option in enumerate(self.options):
             color = option.color if option.color else self.WHITE
             if idx == self.selected_option:
-                self.window.addstr(self.BASE_WINDOW_Y + idx, self.BASE_WINDOW_X, f"> {option.display_name}", curses.A_BOLD | self.SELECTION_COLOR)
+                self.add_element(self.BASE_WINDOW_Y + idx, self.BASE_WINDOW_X, f"> {option.display_name}", curses.A_BOLD | self.SELECTION_COLOR)
             else:
-                self.window.addstr(self.BASE_WINDOW_Y + idx, self.BASE_WINDOW_X, f"  {option.display_name}", color)
+                self.add_element(self.BASE_WINDOW_Y + idx, self.BASE_WINDOW_X, f"  {option.display_name}", color)
         if self.prompt_info:
-            self.window.addstr(self.BASE_WINDOW_Y - 3, self.BASE_WINDOW_X, self.prompt_info.get("msg"), self.prompt_info.get("color", self.RED))
+            self.add_element(self.BASE_WINDOW_Y - 3, self.BASE_WINDOW_X, self.prompt_info.get("msg"), self.prompt_info.get("color", self.RED))
         self.window.refresh()
+
+    def add_element(self, y, x, text, style):
+        self.window.addstr(y, x, text, style)
 
     def navigate(self):
         key = self.stdscr.getch()
@@ -98,19 +101,45 @@ class ListEntriesView(Menu):
     def _set_options(self):
         descriptions = EntryFileServices.get_all_entries_descriptions()
         if descriptions:
-            options = [Option(desc, self.show_options) for desc in descriptions]
+            options = [Option(desc, self.show_entry_actions) for desc in descriptions]
             options.append(Option("Go Back", self.exit_menu))
         else:
             desc = "There is nothing to show. Go back and add some entries!"
             options = [Option(desc, self.exit_menu)]
         self.options = options
 
-    def show_options(self):
+    def show_entry_actions(self):
+        action = EntryOptions(self.stdscr)
+        action.run()
+
+
+class EntryOptions(Menu):
+    
+    BASE_WINDOW_X = 1
+    BASE_WINDOW_Y = 1
+
+    def _set_options(self):
+        self.options = [
+            Option("Show", self.exit_menu),
+            Option("Delete", self.exit_menu),
+            Option("Return", self.exit_menu),
+        ]
+
+    def _create_window(self):
         height, width = self.stdscr.getmaxyx()
-        self.BASE_WINDOW_Y
-        win_h, win_w = 3, int(width/2)
-        win_x, win_y = self.BASE_WINDOW_X + 20, self.BASE_WINDOW_Y - 1 + self.selected_option
-        PromptService.generate_prompt(win_x, win_y, win_h, win_w, msg="Test Prompt")
+        win_h, win_w = int(height/4), int(width/4)
+        win_x, win_y = 30, 10
+        input_window = curses.newwin(win_h, win_w, win_y, win_x)
+        input_window.border()
+        return input_window
+
+    def add_element(self, y, x, text, style):
+        # y, x = 1, 1
+        self.window.addstr(y, x, text, style)
+
+    def display_window(self):
+        self.window.border()
+        return super().display_window()
 
 
 class AddNewEntryView(Menu):
