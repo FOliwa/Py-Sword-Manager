@@ -99,7 +99,8 @@ class MainView(Menu):
 class ListEntriesView(Menu):
 
     def _set_options(self):
-        descriptions = EntryFileServices.get_all_entries_descriptions()
+        entries = EntryFileServices.get_all_entries()
+        descriptions = [e.get("description") for e in entries]
         if descriptions:
             options = [Option(desc, self.show_entry_actions) for desc in descriptions]
             options.append(Option("Go Back", self.exit_menu))
@@ -114,7 +115,7 @@ class ListEntriesView(Menu):
 
 
 class EntryOptions(Menu):
-    
+
     BASE_WINDOW_X = 1
     BASE_WINDOW_Y = 1
 
@@ -132,10 +133,6 @@ class EntryOptions(Menu):
         input_window = curses.newwin(win_h, win_w, win_y, win_x)
         input_window.border()
         return input_window
-
-    def add_element(self, y, x, text, style):
-        # y, x = 1, 1
-        self.window.addstr(y, x, text, style)
 
     def display_window(self):
         self.window.border()

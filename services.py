@@ -61,10 +61,14 @@ class EntryFileServices():
         return description, encrypted_data
 
     @classmethod
-    def get_all_entries_descriptions(cls):
+    def get_all_entries(cls):
         with open(".entries", "r") as f:
             lines = f.readlines()
-        return [item[0] for item in map(cls.get_entry, lines)]
+        entries = []
+        for line in lines:
+            desc, data = cls.get_entry(line)
+            entries.append({"description": desc, "data": data})
+        return entries
 
 
 class ConfigFileServices():
