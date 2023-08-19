@@ -1,6 +1,7 @@
 import curses
 from abc import ABC, abstractmethod
-from services import EntryFileServices, InputService, PromptService
+from functools import partial
+from services import EntryFileServices, InputService, PromptService, AESService
 
 
 class Option:
@@ -15,10 +16,11 @@ class Menu(ABC):
     BASE_WINDOW_X = 10
     BASE_WINDOW_Y = 10
 
-    def __init__(self, stdscr) -> None:
+    def __init__(self, stdscr, data=None) -> None:
         self.prompt_info = None
         self.stdscr = stdscr
         self.window = self._create_window()
+        self.data = data
         self._set_colors()
         self._set_options()
         self._set_default_view_params()
@@ -99,19 +101,19 @@ class MainView(Menu):
 class ListEntriesView(Menu):
 
     def _set_options(self):
+
+        def show_entry_actions(data):
+            action = EntryOptions(self.stdscr, data)
+            action.run()
+
         entries = EntryFileServices.get_all_entries()
-        descriptions = [e.get("description") for e in entries]
-        if descriptions:
-            options = [Option(desc, self.show_entry_actions) for desc in descriptions]
+        if entries:
+            options = [Option(entry.get("description"), partial(show_entry_actions, entry.get("data"))) for entry in entries]
             options.append(Option("Go Back", self.exit_menu))
         else:
             desc = "There is nothing to show. Go back and add some entries!"
             options = [Option(desc, self.exit_menu)]
         self.options = options
-
-    def show_entry_actions(self):
-        action = EntryOptions(self.stdscr)
-        action.run()
 
 
 class EntryOptions(Menu):
@@ -119,9 +121,13 @@ class EntryOptions(Menu):
     BASE_WINDOW_X = 1
     BASE_WINDOW_Y = 1
 
+    def show_data(self):
+        data = AESService.decrypt(self.data)
+        PromptService.generate_prompt(win_w=len(data)+4, msg=data)
+
     def _set_options(self):
         self.options = [
-            Option("Show", self.exit_menu),
+            Option("Show", self.show_data),
             Option("Delete", self.exit_menu),
             Option("Return", self.exit_menu),
         ]
