@@ -15,12 +15,9 @@ Welcome to the **PySwordManager**! This command-line tool allows users to secure
 1. Clone this repository to your local machine.
 2. Make sure you have Python 3.x installed.
 3. Install required python packages from `requirements.txt` file.
-4. Enjoy!
-
-## 🏃 Run it
-
-1. Open your terminal and navigate to the project directory.
-2. Run the `main.py` script: `python main.py`
+4. Open your terminal and navigate to the project directory.
+5. Run the `main.py` script: `python main.py`
+6. Enjoy!
 
 ## 🔐 Security
 - All passwords are securely encrypted using AES encryption.
@@ -39,7 +36,7 @@ So, while the code might not adhere to every best practice, remember that the re
 Happy coding, and may your programming adventures always be filled with excitement and enjoyment!
 
 ## 🦸 Contributors
-- FO
+- ME - Filip Oliwa
 
 ## 🇵🇱 License
 This project is licensed under the [MIT License](LICENSE).
