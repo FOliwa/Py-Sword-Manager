@@ -104,6 +104,7 @@ class ListEntriesView(Menu):
 
         def show_entry_actions(data):
             action = EntryOptionsView(self.stdscr, data)
+            action.refresh_list_view = self._set_options
             action.run()
 
         entries = EntryFileServices.get_all_entries()
@@ -120,6 +121,7 @@ class EntryOptionsView(Menu):
 
     BASE_WINDOW_X = 1
     BASE_WINDOW_Y = 1
+    RELATED_LIST_VIEW = None
 
     def show_entry(self):
         data = AESService.decrypt(self.data)
@@ -135,6 +137,11 @@ class EntryOptionsView(Menu):
             Option("Delete", self.delete_entry),
             Option("Return", self.exit_menu),
         ]
+
+    def delete_entry(self):
+        EntryFileServices.delete_entry(self.data)
+        self.refresh_list_view()
+        return True
 
     def _create_window(self):
         height, width = self.stdscr.getmaxyx()

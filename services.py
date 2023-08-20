@@ -38,13 +38,23 @@ class AESService():
 class EntryFileServices():
 
     @staticmethod
+    def delete_entry(entry_hash):
+        with open(".entries", "r+") as f:
+            lines = f.readlines()
+            f.seek(0)
+            f.truncate()
+            for line in lines:
+                if entry_hash not in line:
+                    f.write(line)
+
+    @staticmethod
     def add_entry(description: str, login: str, password: str) -> None:
         try:
             if '=' in description:
                 return False, "You can't use '=' in description!"
             if len(description) > 32:
                 return False, "Description to broad - the max is 60 characters!"
-            encrypted_data = AESService.encrypt(f"USERNAME: {login}, PASSWD: {password}").decode()
+            encrypted_data = AESService.encrypt(f"USERNAME: {login}, PASSWORD: {password}").decode()
             entry = f"{description.capitalize()}={encrypted_data}\n"
             with open(".entries", "a+") as f:
                 f.write(entry)
