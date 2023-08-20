@@ -103,7 +103,7 @@ class ListEntriesView(Menu):
     def _set_options(self):
 
         def show_entry_actions(data):
-            action = EntryOptions(self.stdscr, data)
+            action = EntryOptionsView(self.stdscr, data)
             action.run()
 
         entries = EntryFileServices.get_all_entries()
@@ -116,19 +116,23 @@ class ListEntriesView(Menu):
         self.options = options
 
 
-class EntryOptions(Menu):
+class EntryOptionsView(Menu):
 
     BASE_WINDOW_X = 1
     BASE_WINDOW_Y = 1
 
-    def show_data(self):
+    def show_entry(self):
         data = AESService.decrypt(self.data)
-        PromptService.generate_prompt(win_w=len(data)+4, msg=data)
+        data = data.split(',')
+        height, width = self.stdscr.getmaxyx()
+        win_h, win_w = int(height/4), int(width/4)
+        win_x, win_y = 30, 10
+        PromptService.generate_prompt(win_x, win_y, win_h, win_w, msg=data)
 
     def _set_options(self):
         self.options = [
-            Option("Show", self.show_data),
-            Option("Delete", self.exit_menu),
+            Option("Show", self.show_entry),
+            Option("Delete", self.delete_entry),
             Option("Return", self.exit_menu),
         ]
 

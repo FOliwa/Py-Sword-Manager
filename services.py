@@ -115,7 +115,11 @@ class PromptService():
         input_window = curses.newwin(win_h, win_w, win_y, win_x)
         input_window.border()
         msg = msg[:win_w]
-        input_window.addstr(1, 1, msg)
+        if isinstance(msg, list):
+            for row, data in enumerate(msg, start=1):
+                input_window.addstr(row, 1, data.strip())
+        else:
+            input_window.addstr(1, 1, msg.strip())
         input_window.refresh()
         input_window.getch()
 
