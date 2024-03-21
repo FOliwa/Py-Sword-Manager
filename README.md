@@ -1,6 +1,6 @@
 # ⚔️🐍 PySwordManager - Secure Python Password Manager
 
-Welcome to the **PySwordManager**! This command-line tool allows users to securely store and manage their passwords. With encryption and hashing techniques, your passwords remain safe and your sensitive information protected.
+Welcome to **PySwordManager**! This command-line tool allows users to securely store and manage their passwords. With encryption and hashing techniques, your passwords remain safe and your sensitive information protected.
 
 ## ☕ Features
 
@@ -14,17 +14,19 @@ Welcome to the **PySwordManager**! This command-line tool allows users to secure
 
 1. Clone this repository to your local machine.
 2. Make sure you have Python 3.x installed.
-3. Install required python packages from `requirements.txt` file.
+3. Install required Python packages from the `requirements.txt` file.
 4. Open your terminal and navigate to the project directory.
-5. Run the `main.py` script: `python main.py`
+5. Run the `main.py` script: `python main.py`.
 6. Enjoy!
 
 ## 🔐 Security
+
 - All passwords are securely encrypted using AES encryption.
 - Your master password is hashed using SHA-256 before comparison.
 - Salt is used to enhance security against attacks.
 
 ## 💾 Disclaimer
+
 This password manager is designed for educational purposes and should not be used for storing sensitive information. It's important to note that security is a complex field and this project provides only basic security features. For real-world use, consider a professionally developed and audited password management solution.
 
 ## 🧭 About the Development
@@ -36,7 +38,9 @@ So, while the code might not adhere to every best practice, remember that the re
 Happy coding, and may your programming adventures always be filled with excitement and enjoyment!
 
 ## 🦸 Contributors
+
 - ME - Filip Oliwa
 
 ## 🇵🇱 License
+
 This project is licensed under the [MIT License](LICENSE).
